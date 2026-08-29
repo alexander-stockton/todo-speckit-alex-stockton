@@ -28,7 +28,9 @@ const editTodoForm = ref(null);
 const newListName = ref("");
 const renameListName = ref("");
 const newTodoTitle = ref("");
+const newTodoDueDate = ref("");
 const editTodoTitle = ref("");
+const editTodoDueDate = ref("");
 
 const listToRename = ref(null);
 const listToDelete = ref(null);
@@ -62,6 +64,35 @@ const sortTodos = (items) =>
 
     return new Date(a.createdAt) - new Date(b.createdAt);
   });
+
+const formatDueDate = (dueDate) => {
+  if (!dueDate) {
+    return "";
+  }
+
+  const [year, month, day] = dueDate.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const isOverdue = (todo) => {
+  if (!todo.dueDate || todo.completed) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [year, month, day] = todo.dueDate.split("-").map(Number);
+  const due = new Date(year, month - 1, day);
+
+  return due < today;
+};
 
 const loadLists = async () => {
   listsLoading.value = true;
@@ -230,12 +261,14 @@ const handleDeleteList = async () => {
 const openAddTodoDialog = () => {
   todoDialogError.value = "";
   newTodoTitle.value = "";
+  newTodoDueDate.value = "";
   addTodoDialogOpen.value = true;
 };
 
 const closeAddTodoDialog = () => {
   addTodoDialogOpen.value = false;
   newTodoTitle.value = "";
+  newTodoDueDate.value = "";
   todoDialogError.value = "";
 };
 
@@ -252,7 +285,8 @@ const handleAddTodo = async () => {
   try {
     const response = await todoServices.createTodo(
       itemsList.value.id,
-      newTodoTitle.value.trim()
+      newTodoTitle.value.trim(),
+      newTodoDueDate.value || null
     );
     todos.value = sortTodos([...todos.value, response.data]);
     closeAddTodoDialog();
@@ -267,6 +301,7 @@ const openEditTodoDialog = (todo) => {
   todoDialogError.value = "";
   todoToEdit.value = todo;
   editTodoTitle.value = todo.title;
+  editTodoDueDate.value = todo.dueDate || "";
   editTodoDialogOpen.value = true;
 };
 
@@ -274,6 +309,7 @@ const closeEditTodoDialog = () => {
   editTodoDialogOpen.value = false;
   todoToEdit.value = null;
   editTodoTitle.value = "";
+  editTodoDueDate.value = "";
   todoDialogError.value = "";
 };
 
@@ -290,6 +326,7 @@ const handleEditTodo = async () => {
   try {
     const response = await todoServices.updateTodo(todoToEdit.value.id, {
       title: editTodoTitle.value.trim(),
+      dueDate: editTodoDueDate.value || null,
     });
     todos.value = sortTodos(
       todos.value.map((todo) => (todo.id === response.data.id ? response.data : todo))
@@ -465,6 +502,13 @@ onMounted(() => {
                 {{ todo.title }}
               </v-list-item-title>
 
+              <v-list-item-subtitle
+                v-if="todo.dueDate"
+                :class="{ 'text-error': isOverdue(todo) }"
+              >
+                {{ formatDueDate(todo.dueDate) }}
+              </v-list-item-subtitle>
+
               <template #append>
                 <v-btn
                   icon="mdi-pencil"
@@ -601,6 +645,12 @@ onMounted(() => {
               :rules="todoTitleRules"
               autofocus
             />
+            <v-text-field
+              v-model="newTodoDueDate"
+              label="Due date"
+              type="date"
+              density="comfortable"
+            />
             <v-alert
               v-if="todoDialogError"
               type="error"
@@ -638,6 +688,12 @@ onMounted(() => {
               density="comfortable"
               :rules="todoTitleRules"
               autofocus
+            />
+            <v-text-field
+              v-model="editTodoDueDate"
+              label="Due date"
+              type="date"
+              density="comfortable"
             />
             <v-alert
               v-if="todoDialogError"

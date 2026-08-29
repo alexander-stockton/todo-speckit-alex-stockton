@@ -1,7 +1,7 @@
 # API Reference
 
 **Base path:** `/todo/`  
-**Status:** Integrated API through **Feature 4** (authentication, lists, todos, user profile).  
+**Status:** Integrated API through **Feature 5** (authentication, lists, todos, user profile, todo due dates).  
 **Authority for new work:** feature specs in `features/` — update this file in the same PR when routes or payloads change.
 
 **Auth:** Send `Authorization: Bearer <token>` on protected routes.  
@@ -15,6 +15,7 @@
 | List CRUD (`GET/POST/PUT/DELETE /todo/lists`) | 2 |
 | Todo CRUD (`GET/POST /todo/lists/:listId/todos`, `PUT/DELETE /todo/todos/:id`) | 3 |
 | User profile (`GET/PUT /todo/users/:id`) | 4 |
+| Todo due dates (`dueDate` on create/update/list) | 5 |
 
 ---
 
@@ -109,20 +110,31 @@
 |--------|------|------|---------|
 | `GET` | `/todo/lists/:listId/todos` | Yes | Todos in an owned list (incomplete first, then `createdAt` ASC) |
 | `POST` | `/todo/lists/:listId/todos` | Yes | Add a todo to an owned list |
-| `PUT` | `/todo/todos/:id` | Yes | Update title and/or `completed` |
+| `PUT` | `/todo/todos/:id` | Yes | Update title, `completed`, and/or `dueDate` |
 | `DELETE` | `/todo/todos/:id` | Yes | Delete a todo owned by the caller |
 
 **Create body:**
 ```json
-{ "title": "Buy milk" }
+{
+  "title": "Buy milk",
+  "dueDate": "2026-07-15"
+}
 ```
+
+`dueDate` is optional. Omit it or send `null` for no due date.
 
 **Update body** (any combination; omit a field to leave it unchanged):
 ```json
 {
   "title": "Buy oat milk",
-  "completed": true
+  "completed": true,
+  "dueDate": "2026-07-20"
 }
+```
+
+Clear due date:
+```json
+{ "dueDate": null }
 ```
 
 **Todo success** (`200` / `201`):
@@ -132,18 +144,21 @@
   "listId": 1,
   "title": "Buy milk",
   "completed": false,
+  "dueDate": "2026-07-15",
   "userId": 42,
   "createdAt": "2026-07-02T12:05:00.000Z",
   "updatedAt": "2026-07-02T12:05:00.000Z"
 }
 ```
 
+`dueDate` is `null` when not set.
+
 **Delete success** (`200`):
 ```json
 { "message": "Todo deleted successfully." }
 ```
 
-**Validation errors:** empty/whitespace title `400` with `"Todo title is required."`; title > 255 chars `400` with `"Todo title must be 255 characters or fewer."`; invalid ids `400`; unowned list/todo `404` with `"List with id=<id> not found."` or `"Todo with id=<id> not found."`
+**Validation errors:** empty/whitespace title `400` with `"Todo title is required."`; title > 255 chars `400` with `"Todo title must be 255 characters or fewer."`; invalid `dueDate` `400` with `"Due date must be a valid date in YYYY-MM-DD format."`; invalid ids `400`; unowned list/todo `404` with `"List with id=<id> not found."` or `"Todo with id=<id> not found."`
 
 ---
 

@@ -66,6 +66,11 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Items managed in list-items dialog (+ nested add/edit/delete); **+ Add Item** only inside that dialog | Dashboard | Feature 3 |
 | Empty items: **"No todos in this list yet."** | Items dialog | Feature 3 |
 | Completed todos show struck-through / muted title | Dashboard row styling | Feature 3 |
+| `dueDate` optional on create/update; `null` clears; omit on `PUT` leaves unchanged | API + Dashboard dialogs | Feature 5 |
+| Due date format `YYYY-MM-DD`; invalid dates → `400` | API validation | Feature 5 |
+| Due date shown on todo row when set (locale-formatted) | Dashboard items dialog | Feature 5 |
+| Incomplete todos with `dueDate` before today (local calendar) use error styling on date | Dashboard `isOverdue` | Feature 5 |
+| Completed todos never use overdue styling | Dashboard | Feature 5 |
 
 ## App chrome
 
@@ -97,7 +102,7 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Error body shape `{ "message": "Human-readable explanation." }` | Controllers | Feature 1 |
-| Validation failures use `400` where specified; missing/unowned resources use `404` | Controllers | Features 2–4 |
+| Validation failures use `400` where specified; missing/unowned resources use `404` | Controllers | Features 2–5 |
 
 ---
 

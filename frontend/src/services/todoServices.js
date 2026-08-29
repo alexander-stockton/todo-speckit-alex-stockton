@@ -5,8 +5,12 @@ const todoServices = {
     return apiClient.get(`lists/${listId}/todos`);
   },
 
-  createTodo(listId, title) {
-    return apiClient.post(`lists/${listId}/todos`, { title });
+  createTodo(listId, title, dueDate = null) {
+    const body = { title };
+    if (dueDate) {
+      body.dueDate = dueDate;
+    }
+    return apiClient.post(`lists/${listId}/todos`, body);
   },
 
   updateTodo(todoId, payload) {

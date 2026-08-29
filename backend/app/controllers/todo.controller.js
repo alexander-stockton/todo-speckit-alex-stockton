@@ -5,6 +5,42 @@ import {
   getAccessibleTodoOrNull,
 } from "../authorization/authorization.js";
 
+const DUE_DATE_MESSAGE = "Due date must be a valid date in YYYY-MM-DD format.";
+
+const parseDueDate = (value) => {
+  if (value === null) {
+    return { value: null };
+  }
+
+  if (value === undefined) {
+    return { value: undefined };
+  }
+
+  if (typeof value !== "string") {
+    return { error: DUE_DATE_MESSAGE };
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return { error: DUE_DATE_MESSAGE };
+  }
+
+  const year = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10);
+  const day = parseInt(match[3], 10);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return { error: DUE_DATE_MESSAGE };
+  }
+
+  return { value };
+};
+
 const exports = {};
 
 exports.findAllByList = async (req, res) => {
@@ -46,7 +82,7 @@ exports.create = async (req, res) => {
       return res.status(404).send({ message: `List with id=${listId} not found.` });
     }
 
-    const { title } = req.body;
+    const { title, dueDate } = req.body;
 
     if (!title?.trim()) {
       return res.status(400).send({ message: "Todo title is required." });
@@ -57,11 +93,17 @@ exports.create = async (req, res) => {
       return res.status(400).send({ message: "Todo title must be 255 characters or fewer." });
     }
 
+    const parsedDueDate = parseDueDate(dueDate ?? null);
+    if (parsedDueDate.error) {
+      return res.status(400).send({ message: parsedDueDate.error });
+    }
+
     const todo = await db.todo.create({
       listId: list.id,
       title: trimmedTitle,
       completed: false,
       userId: req.user.id,
+      dueDate: parsedDueDate.value,
     });
 
     return res.status(201).send(todo);
@@ -83,7 +125,7 @@ exports.update = async (req, res) => {
       return res.status(404).send({ message: `Todo with id=${todoId} not found.` });
     }
 
-    const { title, completed } = req.body;
+    const { title, completed, dueDate } = req.body;
 
     if (title !== undefined) {
       if (!title?.trim()) {
@@ -100,6 +142,15 @@ exports.update = async (req, res) => {
 
     if (completed !== undefined) {
       todo.completed = Boolean(completed);
+    }
+
+    if (dueDate !== undefined) {
+      const parsedDueDate = parseDueDate(dueDate);
+      if (parsedDueDate.error) {
+        return res.status(400).send({ message: parsedDueDate.error });
+      }
+
+      todo.dueDate = parsedDueDate.value;
     }
 
     await todo.save();
