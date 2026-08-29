@@ -39,8 +39,10 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Every authenticated request resolves to `req.user.id` from the session | `authenticate` | Feature 1 |
-| Cross-user access → **`404`**, never `403` (do not confirm existence) | Controllers + `getAccessibleListOrNull` | Feature 2 |
+| Cross-user access → **`404`**, never `403` (do not confirm existence) | Controllers + `getAccessible*OrNull` | Features 2–3 |
 | Lists: reads/writes scoped to `userId = req.user.id`; create ownership from server only | `list.controller` + `getAccessibleListOrNull` | Feature 2 |
+| Todos: parent list must be owned; todo reads/writes scoped to caller; create ignores client `userId` spoofing | `todo.controller` + helpers | Feature 3 |
+| Deleting a list cascades to its todos | Sequelize `List hasMany Todo` `onDelete: CASCADE` | Feature 3 |
 
 ## Lists
 
@@ -51,6 +53,18 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Lists returned **alphabetically by name** | `findAll` `order: name ASC` | Feature 2 |
 | Single-view lists UI (`Dashboard.vue`); list CRUD via dialogs; no sidebar/main split | Dashboard | Feature 2 |
 | Empty lists: **"No lists yet. Create your first list."** | Dashboard | Feature 2 |
+
+## Todos
+
+| Rule | Enforcement | Introduced |
+|------|-------------|------------|
+| Todo title trimmed; empty/whitespace rejected | Create/update API + dialogs | Feature 3 |
+| Todo title max **255** characters | API + client rules | Feature 3 |
+| New todos default `completed: false` | Create | Feature 3 |
+| Sort: **incomplete first**, then `createdAt` ascending | API `order` + client `sortTodos` | Feature 3 |
+| Items managed in list-items dialog (+ nested add/edit/delete); **+ Add Item** only inside that dialog | Dashboard | Feature 3 |
+| Empty items: **"No todos in this list yet."** | Items dialog | Feature 3 |
+| Completed todos show struck-through / muted title | Dashboard row styling | Feature 3 |
 
 ## App chrome
 
@@ -70,7 +84,7 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Error body shape `{ "message": "Human-readable explanation." }` | Controllers | Feature 1 |
-| Validation failures use `400` where specified; missing/unowned resources use `404` | Controllers | Feature 2 |
+| Validation failures use `400` where specified; missing/unowned resources use `404` | Controllers | Features 2–3 |
 
 ---
 
