@@ -39,21 +39,38 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Every authenticated request resolves to `req.user.id` from the session | `authenticate` | Feature 1 |
-| `GET /todo/lists` returns only lists where `userId = req.user.id` | `list.controller` `findAll` | Feature 1 |
+| Cross-user access → **`404`**, never `403` (do not confirm existence) | Controllers + `getAccessibleListOrNull` | Feature 2 |
+| Lists: reads/writes scoped to `userId = req.user.id`; create ownership from server only | `list.controller` + `getAccessibleListOrNull` | Feature 2 |
 
-## UI (Feature 1)
+## Lists
+
+| Rule | Enforcement | Introduced |
+|------|-------------|------------|
+| List name trimmed; empty/whitespace rejected | Create/update API + Dashboard dialogs | Feature 2 |
+| List name max **100** characters | API + client rules | Feature 2 |
+| Lists returned **alphabetically by name** | `findAll` `order: name ASC` | Feature 2 |
+| Single-view lists UI (`Dashboard.vue`); list CRUD via dialogs; no sidebar/main split | Dashboard | Feature 2 |
+| Empty lists: **"No lists yet. Create your first list."** | Dashboard | Feature 2 |
+
+## App chrome
+
+| Rule | Enforcement | Introduced |
+|------|-------------|------------|
+| `MenuBar` shows signed-in user's name and **Sign out** | `MenuBar.vue` | Feature 2 |
+| `MenuBar` hidden on login and register routes | `App.vue` | Feature 2 |
+
+## UI (auth pages)
 
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Login and register use full-screen layout (no `MenuBar`) | `App.vue` | Feature 1 |
-| Protected home placeholder shows welcome with user's first name | `Home.vue` | Feature 1 |
-| **Sign out** on home placeholder (standalone button; `MenuBar` deferred to Feature 2) | `Home.vue` | Feature 1 |
 
 ## Errors (product convention)
 
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Error body shape `{ "message": "Human-readable explanation." }` | Controllers | Feature 1 |
+| Validation failures use `400` where specified; missing/unowned resources use `404` | Controllers | Feature 2 |
 
 ---
 

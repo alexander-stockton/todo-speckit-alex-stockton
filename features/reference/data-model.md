@@ -1,6 +1,6 @@
 # Data Model Reference
 
-**Status:** Integrated schema through **Feature 1** (`users`, `sessions`, `lists`).  
+**Status:** Integrated schema through **Feature 2** (`users`, `sessions`, `lists`).  
 **Authority for new work:** feature specs in `features/` — update this file in the same PR when schema changes.  
 **Architecture:** [ADR-0003 — MySQL relational database](../../docs/adr/0003-mysql-relational-database.md)
 
@@ -9,7 +9,7 @@
 | Table / column | Introduced |
 |----------------|------------|
 | `users`, `sessions` | Feature 1 |
-| `lists` (read-only API in Feature 1; CRUD in Feature 2) | Feature 1 (table) |
+| `lists` (CRUD) | Feature 2 |
 
 ---
 
