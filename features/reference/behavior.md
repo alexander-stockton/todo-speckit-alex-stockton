@@ -43,6 +43,7 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Lists: reads/writes scoped to `userId = req.user.id`; create ownership from server only | `list.controller` + `getAccessibleListOrNull` | Feature 2 |
 | Todos: parent list must be owned; todo reads/writes scoped to caller; create ignores client `userId` spoofing | `todo.controller` + helpers | Feature 3 |
 | Deleting a list cascades to its todos | Sequelize `List hasMany Todo` `onDelete: CASCADE` | Feature 3 |
+| Profile: `GET`/`PUT /todo/users/:id` only when `:id === req.user.id` | `user.controller` + `getAccessibleUserOrNull` | Feature 4 |
 
 ## Lists
 
@@ -70,8 +71,20 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
-| `MenuBar` shows signed-in user's name and **Sign out** | `MenuBar.vue` | Feature 2 |
+| `MenuBar` user icon opens profile dropdown (name, username, email) | `MenuBar.vue` | Feature 4 |
+| **Log out** in profile dropdown only (no standalone **Sign out** on app bar) | `MenuBar.vue` | Feature 4 |
 | `MenuBar` hidden on login and register routes | `App.vue` | Feature 2 |
+
+## Profile & MenuBar
+
+| Rule | Enforcement | Introduced |
+|------|-------------|------------|
+| Profile fields trimmed; required strings rejected when empty | Profile `PUT` + Edit Profile dialog | Feature 4 |
+| Username normalized `trim().toLowerCase()` on save | User model hook + profile update | Features 1, 4 |
+| Password on profile update is optional; if set, min **8** chars and bcrypt hash | Profile `PUT` + dialog rules | Feature 4 |
+| Duplicate username → `"Username is already taken."`; duplicate email → `"Email is already registered."` | Profile `PUT` | Feature 4 |
+| Shared `emailRules` for register and Edit Profile | `frontend/src/config/validation.js` | Features 1, 4 |
+| After profile save: refresh `localStorage` `user` and dispatch `user-logged-in` | MenuBar | Feature 4 |
 
 ## UI (auth pages)
 
@@ -84,7 +97,7 @@ They do **not** authorize new scope — implement only from `features/feature-*.
 | Rule | Enforcement | Introduced |
 |------|-------------|------------|
 | Error body shape `{ "message": "Human-readable explanation." }` | Controllers | Feature 1 |
-| Validation failures use `400` where specified; missing/unowned resources use `404` | Controllers | Features 2–3 |
+| Validation failures use `400` where specified; missing/unowned resources use `404` | Controllers | Features 2–4 |
 
 ---
 
